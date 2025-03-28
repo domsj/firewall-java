@@ -1,12 +1,9 @@
 package dev.aikido.agent_api.vulnerabilities.ssrf;
 
 import dev.aikido.agent_api.helpers.net.IPList;
-import inet.ipaddr.IPAddressString;
-
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class IsPrivateIP {
     // Define private IP ranges
@@ -40,16 +37,13 @@ public final class IsPrivateIP {
             "2001:db8::/32", // Documentation prefix (RFC 3849)
             "3fff::/20" // Documentation prefix (RFC 9637)
     );
-    private static final IPList privateIpNetworks = new IPList();
-
-    static {
-        PRIVATE_IP_RANGES.stream().forEach(privateIpNetworks::add);
-        PRIVATE_IPV6_RANGES.stream().forEach(privateIpNetworks::add);
-        // Add IPv4-mapped IPv6 addresses
-        for (String ipv4Ranges: PRIVATE_IP_RANGES) {
-            privateIpNetworks.add(mapIPv4ToIPv6(ipv4Ranges));
-        }
-    }
+    private static final IPList privateIpNetworks = new IPList(
+        Stream.of(
+            PRIVATE_IP_RANGES.stream(),
+            PRIVATE_IPV6_RANGES.stream(),
+            PRIVATE_IP_RANGES.stream().map(IsPrivateIP::mapIPv4ToIPv6)
+        ).flatMap(stream -> stream).collect(Collectors.toList())
+    );
 
     private IsPrivateIP() {
     }
