@@ -1,11 +1,10 @@
 package dev.aikido.agent_api.helpers.net;
 
-import java.util.HashSet;
+import gnu.trove.set.hash.TIntHashSet;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Set;
 import java.util.Arrays;
 
 public final class IPList {
@@ -17,7 +16,7 @@ public final class IPList {
         }
     }
     
-    private final int[] ipv4Singles;
+    private final TIntHashSet ipv4Singles;
     private final IPv6Address[] ipv6Singles;
 
     private final int[] ipv4Prefixes;
@@ -29,7 +28,7 @@ public final class IPList {
     public IPList(
         Iterable<String> ips
     ) {
-        var ipv4Singles = new ArrayList<Integer>();
+        var ipv4Singles = new TIntHashSet();
         var ipv4Ranges = new ArrayList<int[]>();
         var ipv6Singles = new ArrayList<IPv6Address>();
         var ipv6Ranges = new ArrayList<long[]>();
@@ -61,9 +60,9 @@ public final class IPList {
             }
         }
 
-        this.ipv4Singles = ipv4Singles.stream().mapToInt(Integer::intValue).toArray();
+        this.ipv4Singles = ipv4Singles;
+
         this.ipv6Singles = ipv6Singles.toArray(new IPv6Address[0]);
-        Arrays.sort(this.ipv4Singles);
         Arrays.sort(this.ipv6Singles);
 
 
@@ -151,7 +150,7 @@ public final class IPList {
         int ipInt = ipv4ToInt(ip);
         
         // Check single IPs first
-        if (Arrays.binarySearch(ipv4Singles, ipInt) >= 0) {
+        if (ipv4Singles.contains(ipInt)) {
             return true;
         }
         
