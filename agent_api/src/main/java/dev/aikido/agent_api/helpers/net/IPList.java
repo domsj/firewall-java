@@ -17,8 +17,8 @@ public final class IPList {
         }
     }
     
-    private final Set<Integer> ipv4Singles;
-    private final Set<IPv6Address> ipv6Singles;
+    private final int[] ipv4Singles;
+    private final IPv6Address[] ipv6Singles;
 
     private final int[] ipv4Prefixes;
     private final byte[] ipv4MaskBits;
@@ -29,9 +29,9 @@ public final class IPList {
     public IPList(
         Iterable<String> ips
     ) {
-        var ipv4Singles = new HashSet<Integer>();
+        var ipv4Singles = new ArrayList<Integer>();
         var ipv4Ranges = new ArrayList<int[]>();
-        var ipv6Singles = new HashSet<IPv6Address>();
+        var ipv6Singles = new ArrayList<IPv6Address>();
         var ipv6Ranges = new ArrayList<long[]>();
 
         for (var ip : ips) {
@@ -61,8 +61,10 @@ public final class IPList {
             }
         }
 
-        this.ipv4Singles = Collections.unmodifiableSet(new HashSet<>(ipv4Singles));
-        this.ipv6Singles = Collections.unmodifiableSet(new HashSet<>(ipv6Singles));
+        this.ipv4Singles = ipv4Singles.stream().mapToInt(Integer::intValue).toArray();
+        this.ipv6Singles = ipv6Singles.toArray(new IPv6Address[0]);
+        Arrays.sort(this.ipv4Singles);
+        Arrays.sort(this.ipv6Singles);
 
 
         // Sort and convert the IPv4 ranges to parallel arrays
@@ -149,7 +151,7 @@ public final class IPList {
         int ipInt = ipv4ToInt(ip);
         
         // Check single IPs first
-        if (ipv4Singles.contains(ipInt)) {
+        if (Arrays.binarySearch(ipv4Singles, ipInt) >= 0) {
             return true;
         }
         
@@ -175,7 +177,7 @@ public final class IPList {
         IPv6Address addr = parseIPv6(ip);
         
         // Check single IPs first
-        if (ipv6Singles.contains(addr)) {
+        if (Arrays.binarySearch(ipv6Singles, addr) >= 0) {
             return true;
         }
         
